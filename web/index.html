@@ -126,6 +126,7 @@ const I18N = {
     empty: "当前等级范围内没有可练习的词。请放宽上方等级，或确认词表已包含释义。",
     noConj: "该动词没有可用的拉丁美洲变位。",
     search: "搜索词条", word: "词条", level: "等级", gloss: "释义",
+    prev: "上一页", pageNext: "下一页", page: "页",
     newPerDay: "每日新词", reviewCap: "复习上限", save: "保存",
     expSet: "导出设置", impSet: "导入设置", expProg: "导出进度", impProg: "导入进度",
     recorded: "已保存", localOnly: "条。进度和设置仅保存在本机浏览器。",
@@ -147,6 +148,7 @@ const I18N = {
     empty: "No words in this level range. Widen the levels above, or rebuild so meanings are included.",
     noConj: "No Latin American conjugation is available for this verb.",
     search: "Search", word: "Word", level: "Level", gloss: "Meaning",
+    prev: "Previous", pageNext: "Next page", page: "page",
     newPerDay: "New words per day", reviewCap: "Review limit", save: "Save",
     expSet: "Export settings", impSet: "Import settings", expProg: "Export progress", impProg: "Import progress",
     recorded: "Saved", localOnly: "cards. Progress and settings stay in this browser.",
@@ -166,6 +168,7 @@ const settings = Object.assign({
 let progress = JSON.parse(localStorage.getItem("esvocab-progress") || "{}");
 let day = JSON.parse(localStorage.getItem("esvocab-day") || "{}");
 let vocab = [], sentences = {}, view = "review", card = null, revealed = false, rangeAnchor = null;
+let browsePage = 1, browseQuery = "";
 
 function lang() {
   if (settings.lang === "en" || settings.lang === "zh") return settings.lang;
@@ -380,16 +383,26 @@ function renderConj(app) {
   document.getElementById("skip").onclick = () => { card = null; paint(); };
 }
 function renderBrowse(app) {
-  const q = (document.getElementById("q") || {}).value || "";
-  const rows = vocab.filter(v => !q || v.lemma.includes(q.toLowerCase())).slice(0, 80);
+  const PAGE = 80;
+  const q = browseQuery;
+  const rows = vocab.filter(v => !q || v.lemma.includes(q.toLowerCase()));
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE));
+  browsePage = Math.min(Math.max(1, browsePage), pages);
+  const slice = rows.slice((browsePage - 1) * PAGE, browsePage * PAGE);
   app.innerHTML = `<p><input id="q" type="text" placeholder="${t("search")}"></p>
     <table><tr><th>${t("word")}</th><th>${t("level")}</th><th>${t("gloss")}</th></tr>
-    ${rows.map(v => `<tr><td>${art(v)}${v.lemma}</td><td>${v.cefr}</td><td>${v.gloss || ""}</td></tr>`).join("")}
-    </table>`;
+    ${slice.map(v => `<tr><td>${art(v)}${v.lemma}</td><td>${v.cefr}</td><td>${v.gloss || ""}</td></tr>`).join("")}
+    </table>
+    <div class="grade">
+      <button id="prev" type="button" ${browsePage <= 1 ? "disabled" : ""}>${t("prev")}</button>
+      <span class="meta">${browsePage} / ${pages} ${t("page")} · ${rows.length}</span>
+      <button id="nextp" type="button" ${browsePage >= pages ? "disabled" : ""}>${t("pageNext")}</button>
+    </div>`;
   const box = document.getElementById("q");
   box.value = q;
-  box.oninput = () => renderBrowse(app);
-  box.focus();
+  box.oninput = () => { browseQuery = box.value; browsePage = 1; renderBrowse(app); };
+  document.getElementById("prev").onclick = () => { browsePage -= 1; renderBrowse(app); };
+  document.getElementById("nextp").onclick = () => { browsePage += 1; renderBrowse(app); };
 }
 function renderSettings(app) {
   app.innerHTML = `<div class="panel">
