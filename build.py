@@ -27,7 +27,7 @@ WORDHOARD_ZIP = "https://github.com/natema/wordhoard/releases/download/v0.1.0/wo
 DOOZAN_DICT = "https://raw.githubusercontent.com/doozan/spanish_data/master/es-en.data"
 DOOZAN_SENT = "https://raw.githubusercontent.com/doozan/spanish_data/master/sentences.tsv"
 
-MAX_RANK = 5000
+MAX_RANK = 6000
 MAX_SENTENCES = 2
 SENT_MIN = 4
 SENT_MAX = 16

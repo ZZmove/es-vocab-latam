@@ -15,7 +15,7 @@ python3 build.py
 - `dist/index.html`
 - `dist/vocab.json`
 - `dist/sentences.json`
-- `dist/review.csv`：人工核对表，含排名、等级、释义、是否进默认队列、变位时态和例句。Excel 用 UTF-8 BOM。只到 B2。
+- `dist/review.csv`：人工核对表，含排名、等级、释义、是否进默认队列、变位时态和例句。Excel 用 UTF-8 BOM。排名前 6000，等级到 B2。
 
 本地预览：
 
