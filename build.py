@@ -285,10 +285,47 @@ def build() -> None:
     (DIST / "index.html").write_text(html, encoding="utf-8")
     (DIST / "NOTICE.md").write_text((ROOT / "NOTICE.md").read_text(encoding="utf-8"), encoding="utf-8")
     (DIST / "LICENSE-DATA").write_text((ROOT / "LICENSE-DATA").read_text(encoding="utf-8"), encoding="utf-8")
+    write_review_csv(DIST / "review.csv", vocab, sent_out)
     verbs = sum(1 for v in vocab if v["paradigms"])
     gloss_n = sum(1 for v in vocab if v["gloss"])
     print(f"vocab {len(vocab)} with gloss {gloss_n} with paradigm {verbs} sentences {len(sent_out)}")
     print(f"wrote {DIST}")
+
+
+def write_review_csv(path: Path, vocab: list[dict], sent_out: dict) -> None:
+    """Flat sheet for manual checks. C1/C2 are not in this pack."""
+    fields = [
+        "rank", "cefr", "lemma", "pos", "gender", "gloss", "plural",
+        "in_default_queue", "has_paradigm", "tenses",
+        "sentence_es", "sentence_en", "note",
+    ]
+    with path.open("w", encoding="utf-8-sig", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=fields)
+        writer.writeheader()
+        for item in vocab:
+            sents = sent_out.get(item["id"]) or []
+            notes = []
+            if not item["gloss"]:
+                notes.append("no gloss")
+            if item["pos"] in {"VERB", "AUX"} and not item["paradigms"]:
+                notes.append("no paradigm")
+            if item["pos"] == "NOUN" and not item["gender"]:
+                notes.append("no gender")
+            writer.writerow({
+                "rank": item["rank"],
+                "cefr": item["cefr"],
+                "lemma": item["lemma"],
+                "pos": item["pos"],
+                "gender": item["gender"],
+                "gloss": item["gloss"],
+                "plural": " ".join(item["plural"]),
+                "in_default_queue": "yes" if item["gloss"] and item["cefr"] in {"A2", "B1"} else "no",
+                "has_paradigm": "yes" if item["paradigms"] else "no",
+                "tenses": " ".join(item["paradigms"]),
+                "sentence_es": " | ".join(s["es"] for s in sents),
+                "sentence_en": " | ".join(s["en"] for s in sents),
+                "note": "; ".join(notes),
+            })
 
 
 if __name__ == "__main__":
