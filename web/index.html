@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>西语词表 · 拉美</title>
+<style>
+  :root { color-scheme: light dark; --line: #ccc; --ok: #1b7f4a; --bad: #a33; }
+  body { font: 16px/1.45 system-ui, sans-serif; margin: 0 auto; max-width: 40rem; padding: 1rem; }
+  header, nav, section { margin-bottom: 1rem; }
+  nav button, .row button, .grade button { margin: 0 .35rem .35rem 0; }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 1rem; min-height: 8rem; }
+  .lemma { font-size: 2rem; }
+  .meta, .hint { color: #666; font-size: .9rem; }
+  input[type=text], select { font: inherit; padding: .4rem; }
+  input[type=text] { width: 100%; box-sizing: border-box; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); }
+  table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+  td, th { border-bottom: 1px solid var(--line); text-align: left; padding: .25rem; }
+  footer { font-size: .8rem; color: #666; }
+</style>
+</head>
+<body>
+<header>
+  <h1>西语词表</h1>
+  <p class="meta">拉美五人称。等级是词频估算，不是塞万提斯考纲。重音默认宽松。</p>
+</header>
+<nav>
+  <button data-view="review">认词</button>
+  <button data-view="dict">听写</button>
+  <button data-view="conj">变位</button>
+  <button data-view="browse">浏览</button>
+  <button data-view="settings">设置</button>
+</nav>
+<section id="app">加载词表…</section>
+<footer>
+  词频与变位：wordhoard CC-BY-SA 4.0。释义：英语维基词典 / doozan CC-BY-SA。例句：Tatoeba CC-BY 2.0 FR。
+  无 vosotros；ustedes 用第三人称复数。不含智利口语变位，也不含简单过去时标签。
+</footer>
+<script>
+const TENSES = {
+  pres: "现在时", impf: "未完成过去", fut: "将来时", cond: "条件式",
+  "subj.pres": "虚拟现在", "subj.impf": "虚拟未完成", "subj.fut": "虚拟将来",
+  imp: "命令式", ger: "副动词", part: "过去分词"
+};
+const PERSONS = {
+  "1sg": "yo", "2sg": "tú", "3sg": "usted / él / ella", "1pl": "nosotros", "3pl": "ustedes",
+  ger: "副动词", part: "过去分词"
+};
+const POS = {NOUN:"名词", VERB:"动词", AUX:"动词", ADJ:"形容词", ADV:"副词"};
+const LEVELS = ["A1","A2","B1","B2","C1","C2"];
+
+const settings = Object.assign({
+  newPerDay: 15, reviewCap: 40, cefrFrom: "A2", cefrTo: "B1", strictAccent: false
+}, JSON.parse(localStorage.getItem("esvocab-settings") || "{}"));
+let progress = JSON.parse(localStorage.getItem("esvocab-progress") || "{}");
+let vocab = [];
+let sentences = {};
+let view = "review";
+let card = null;
+let revealed = false;
+
+function save() {
+  localStorage.setItem("esvocab-settings", JSON.stringify(settings));
+  localStorage.setItem("esvocab-progress", JSON.stringify(progress));
+}
+function fold(s) {
+  s = (s || "").toLowerCase().trim();
+  if (settings.strictAccent) return s;
+  return s.replace(/[áà]/g,"a").replace(/[éè]/g,"e").replace(/[íì]/g,"i").replace(/[óò]/g,"o").replace(/[úùü]/g,"u");
+}
+function today() { return new Date().toISOString().slice(0,10); }
+function addDays(n) {
+  const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0,10);
+}
+function inRange(level) {
+  return LEVELS.indexOf(level) >= LEVELS.indexOf(settings.cefrFrom)
+    && LEVELS.indexOf(level) <= LEVELS.indexOf(settings.cefrTo);
+}
+function art(item) {
+  if (item.pos !== "NOUN" || !item.gender) return "";
+  return item.gender === "f" ? "la " : "el ";
+}
+function dueQueue() {
+  const day = today();
+  const pool = vocab.filter(v => inRange(v.cefr) && v.gloss);
+  const review = pool.filter(v => progress[v.id] && progress[v.id].due <= day);
+  const fresh = pool.filter(v => !progress[v.id]);
+  fresh.sort((a,b) => a.rank - b.rank);
+  return review.slice(0, settings.reviewCap).concat(fresh.slice(0, settings.newPerDay));
+}
+function grade(id, kind) {
+  const prev = progress[id] || {step: 0};
+  let step = prev.step || 0;
+  let days = 1;
+  if (kind === "again") { step = 0; days = 1; }
+  else if (kind === "hard") { days = 3; }
+  else { step += 1; days = [1,4,10,25][Math.min(step, 3)]; }
+  progress[id] = {step, due: addDays(days), last: kind, seen: today()};
+  save();
+}
+
+function promptConj(item) {
+  const options = [];
+  for (const [tense, persons] of Object.entries(item.paradigms || {})) {
+    for (const [person, forms] of Object.entries(persons)) {
+      if (forms && forms.length) options.push({tense, person, forms});
+    }
+  }
+  if (!options.length) return null;
+  return options[Math.floor(Math.random() * options.length)];
+}
+
+function render() {
+  const app = document.getElementById("app");
+  if (view === "settings") return renderSettings(app);
+  if (view === "browse") return renderBrowse(app);
+  if (!card) card = nextCard();
+  if (!card) { app.innerHTML = "<p>这个范围内没有可练的词。放宽等级，或先跑构建确认释义已合并。</p>"; return; }
+  if (view === "review") renderReview(app);
+  else if (view === "dict") renderDict(app);
+  else renderConj(app);
+}
+function nextCard() {
+  const q = dueQueue();
+  if (view === "conj") {
+    const verbs = vocab.filter(v => v.paradigms && Object.keys(v.paradigms).length && inRange(v.cefr));
+    if (!verbs.length) return null;
+    const item = verbs[Math.floor(Math.random() * Math.min(verbs.length, 400))];
+    return {item, conj: promptConj(item)};
+  }
+  if (!q.length) return null;
+  return {item: q[0], conj: null};
+}
+function renderReview(app) {
+  const item = card.item;
+  const sents = sentences[item.id] || [];
+  app.innerHTML = `<div class="card">
+    <div class="lemma">${art(item)}${item.lemma}</div>
+    <div class="meta">${POS[item.pos] || item.pos} · ${item.cefr} · 排名 ${item.rank}</div>
+    ${revealed ? `<p>${item.gloss || "（无释义）"}</p>${sents.map(s => `<p>${s.es}<br><span class="meta">${s.en}</span></p>`).join("")}` : `<p class="hint">想释义，再翻面</p>`}
+  </div>
+  <p class="row">${revealed ? "" : `<button id="show">翻面</button>`}
+  <span class="grade">
+    <button data-g="again">不认识</button>
+    <button data-g="hard">模糊</button>
+    <button data-g="good">认识</button>
+  </span></p>`;
+  const show = document.getElementById("show");
+  if (show) show.onclick = () => { revealed = true; render(); };
+  app.querySelectorAll("[data-g]").forEach(btn => btn.onclick = () => {
+    grade(item.id, btn.dataset.g); revealed = false; card = null; render();
+  });
+}
+function renderDict(app) {
+  const item = card.item;
+  app.innerHTML = `<div class="card">
+    <p>${item.gloss || "（无释义，跳过）"}</p>
+    <div class="meta">${POS[item.pos] || item.pos} · ${item.cefr}</div>
+    <p><input id="ans" type="text" placeholder="西语词元" autocomplete="off"></p>
+    <p id="msg"></p>
+  </div>
+  <p><button id="check">检查</button> <button id="skip">跳过</button></p>`;
+  const ans = document.getElementById("ans");
+  ans.focus();
+  document.getElementById("check").onclick = () => {
+    const ok = fold(ans.value) === fold(item.lemma);
+    document.getElementById("msg").innerHTML = ok
+      ? `<span class="ok">对。${item.lemma}</span>`
+      : `<span class="bad">是 ${item.lemma}</span>`;
+    grade(item.id, ok ? "good" : "again");
+    setTimeout(() => { card = null; render(); }, 700);
+  };
+  ans.onkeydown = e => { if (e.key === "Enter") document.getElementById("check").click(); };
+  document.getElementById("skip").onclick = () => { card = null; render(); };
+}
+function renderConj(app) {
+  const item = card.item;
+  const conj = card.conj;
+  if (!conj) { app.innerHTML = "<p>这个词没有拉美变位。</p>"; return; }
+  app.innerHTML = `<div class="card">
+    <div class="lemma">${item.lemma}</div>
+    <div class="meta">${TENSES[conj.tense] || conj.tense} · ${PERSONS[conj.person] || conj.person}</div>
+    <p><input id="ans" type="text" placeholder="变位" autocomplete="off"></p>
+    <p id="msg"></p>
+  </div>
+  <p><button id="check">检查</button> <button id="skip">下一题</button></p>`;
+  const ans = document.getElementById("ans");
+  ans.focus();
+  document.getElementById("check").onclick = () => {
+    const ok = conj.forms.some(f => fold(f) === fold(ans.value));
+    document.getElementById("msg").innerHTML = ok
+      ? `<span class="ok">对。${conj.forms[0]}</span>`
+      : `<span class="bad">接受：${conj.forms.join(" / ")}</span>`;
+  };
+  ans.onkeydown = e => { if (e.key === "Enter") document.getElementById("check").click(); };
+  document.getElementById("skip").onclick = () => { card = null; render(); };
+}
+function renderBrowse(app) {
+  const q = (document.getElementById("q") || {}).value || "";
+  const rows = vocab.filter(v => !q || v.lemma.includes(q.toLowerCase())).slice(0, 80);
+  app.innerHTML = `<p><input id="q" type="text" placeholder="搜索词元" value="${q}"></p>
+    <table><tr><th>词</th><th>等级</th><th>释义</th></tr>
+    ${rows.map(v => `<tr><td>${art(v)}${v.lemma}</td><td>${v.cefr}</td><td>${v.gloss || ""}</td></tr>`).join("")}
+    </table>`;
+  document.getElementById("q").oninput = () => renderBrowse(app);
+}
+function renderSettings(app) {
+  app.innerHTML = `<p>每日新词 <input id="npd" type="number" min="1" max="100" value="${settings.newPerDay}"></p>
+    <p>复习上限 <input id="cap" type="number" min="1" max="200" value="${settings.reviewCap}"></p>
+    <p>等级 <select id="from">${LEVELS.map(l => `<option ${l===settings.cefrFrom?"selected":""}>${l}</option>`).join("")}</select>
+    到 <select id="to">${LEVELS.map(l => `<option ${l===settings.cefrTo?"selected":""}>${l}</option>`).join("")}</select></p>
+    <p><label><input id="strict" type="checkbox" ${settings.strictAccent?"checked":""}> 严格重音</label></p>
+    <p><button id="save">保存</button></p>
+    <p><button id="exp">导出进度</button> <button id="imp">导入进度</button></p>
+    <p class="meta">已记录 ${Object.keys(progress).length} 条。进度只在这台浏览器。</p>`;
+  document.getElementById("save").onclick = () => {
+    settings.newPerDay = +document.getElementById("npd").value || 15;
+    settings.reviewCap = +document.getElementById("cap").value || 40;
+    settings.cefrFrom = document.getElementById("from").value;
+    settings.cefrTo = document.getElementById("to").value;
+    settings.strictAccent = document.getElementById("strict").checked;
+    save(); card = null; render();
+  };
+  document.getElementById("exp").onclick = () => {
+    const blob = new Blob([JSON.stringify(progress)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = "esvocab-progress.json"; a.click();
+  };
+  document.getElementById("imp").onclick = () => {
+    const inp = document.createElement("input");
+    inp.type = "file"; inp.accept = "application/json";
+    inp.onchange = () => {
+      const reader = new FileReader();
+      reader.onload = () => { progress = JSON.parse(reader.result); save(); render(); };
+      reader.readAsText(inp.files[0]);
+    };
+    inp.click();
+  };
+}
+
+document.querySelectorAll("nav button").forEach(btn => btn.onclick = () => {
+  view = btn.dataset.view; card = null; revealed = false; render();
+});
+
+Promise.all([
+  fetch("vocab.json").then(r => r.json()),
+  fetch("sentences.json").then(r => r.json()).catch(() => ({}))
+]).then(([v, s]) => {
+  vocab = v.items || [];
+  sentences = s || {};
+  render();
+}).catch(() => {
+  document.getElementById("app").textContent = "读不到 vocab.json。请在 dist/ 目录起一个本地服务器，或上传整个 dist/。";
+});
+</script>
+</body>
+</html>
