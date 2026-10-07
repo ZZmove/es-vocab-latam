@@ -109,52 +109,54 @@
 <div class="chips" id="levels"></div>
 <div class="chips" id="quick" style="margin-top:.45rem"></div>
 <nav id="nav"></nav>
-<section id="app">Loading…</section>
+<section id="app">Loading vocabulary…</section>
 <footer id="foot"></footer>
 <script>
 const I18N = {
   zh: {
-    title: "西语词表",
-    subtitle: "拉美五人称。等级是词频估算，不是塞万提斯考纲。",
+    title: "西班牙语词汇",
+    subtitle: "变位按拉丁美洲用法：yo、tú、usted、nosotros、ustedes。等级按词频估算，不是塞万提斯学院大纲。",
     review: "认词", dict: "听写", conj: "变位", browse: "浏览", settings: "设置",
-    today: "今日新词", range: "等级", accentLoose: "重音宽松", accentStrict: "严格重音",
-    flip: "翻面", again: "不认识", hard: "模糊", good: "认识",
-    think: "先想释义，再翻面", noGloss: "（无释义）",
-    check: "检查", skip: "跳过", next: "下一题",
-    typeLemma: "西语词元", typeForm: "变位",
-    right: "对", answer: "是", accept: "接受",
-    empty: "这个范围内没有可练的词。点上面的等级放宽，或确认构建已合并释义。",
-    noConj: "这个词没有可用的拉美变位。",
-    search: "搜索词元", word: "词", level: "等级", gloss: "释义",
+    today: "今日新词", accentLoose: "忽略重音", accentStrict: "核对重音",
+    flip: "显示释义", again: "不认识", hard: "不确定", good: "认识",
+    think: "先回忆释义，再显示。", noGloss: "暂无释义",
+    check: "核对", skip: "跳过", next: "下一题",
+    typeLemma: "输入词条", typeForm: "输入变位形式",
+    right: "正确", answer: "正确答案", accept: "也可接受",
+    empty: "当前等级范围内没有可练习的词。请放宽上方等级，或确认词表已包含释义。",
+    noConj: "该动词没有可用的拉丁美洲变位。",
+    search: "搜索词条", word: "词条", level: "等级", gloss: "释义",
     newPerDay: "每日新词", reviewCap: "复习上限", save: "保存",
     expSet: "导出设置", impSet: "导入设置", expProg: "导出进度", impProg: "导入进度",
-    recorded: "已记录", localOnly: "条。进度和设置只在这台浏览器。",
-    noun: "名词", verb: "动词", adj: "形容词", adv: "副词", rank: "排名",
-    t: {pres:"现在时", impf:"未完成过去", fut:"将来时", cond:"条件式", "subj.pres":"虚拟现在", "subj.impf":"虚拟未完成", "subj.fut":"虚拟将来", imp:"命令式", ger:"副动词", part:"过去分词"},
-    foot: "词表为改编作品。署名与改动说明见 NOTICE.md。未获上游背书。"
+    recorded: "已保存", localOnly: "条。进度和设置仅保存在本机浏览器。",
+    noun: "名词", verb: "动词", adj: "形容词", adv: "副词", rank: "词频排名",
+    ger: "副动词", part: "过去分词",
+    t: {pres:"现在时", impf:"过去未完成时", fut:"简单将来时", cond:"条件式", "subj.pres":"现在时虚拟式", "subj.impf":"过去未完成虚拟式", "subj.fut":"将来时虚拟式", imp:"命令式", ger:"副动词", part:"过去分词"},
+    foot: "本词表为改编数据集。署名与修改说明见 NOTICE.md。不代表上游项目立场。"
   },
   en: {
-    title: "LatAm Spanish",
-    subtitle: "Latin American verb forms: yo, tú, usted, nosotros, ustedes. Levels are frequency estimates, not a Cervantes syllabus.",
-    review: "Recall", dict: "Dictation", conj: "Conjugation", browse: "Browse", settings: "Settings",
-    today: "New today", range: "Level", accentLoose: "Loose accents", accentStrict: "Strict accents",
-    flip: "Show", again: "Again", hard: "Fuzzy", good: "Known",
-    think: "Recall the gloss, then flip.", noGloss: "(no gloss)",
+    title: "Spanish vocabulary",
+    subtitle: "Latin American forms: yo, tú, usted, nosotros, ustedes. Levels are frequency estimates, not a Cervantes syllabus.",
+    review: "Review", dict: "Dictation", conj: "Verbs", browse: "Browse", settings: "Settings",
+    today: "New words today", accentLoose: "Ignore accents", accentStrict: "Check accents",
+    flip: "Reveal", again: "Again", hard: "Hard", good: "Good",
+    think: "Recall the meaning, then reveal.", noGloss: "No meaning available",
     check: "Check", skip: "Skip", next: "Next",
-    typeLemma: "Spanish lemma", typeForm: "Conjugation",
-    right: "Yes", answer: "It is", accept: "Accepted",
-    empty: "Nothing to study in this range. Widen the levels above, or rebuild so glosses are merged.",
-    noConj: "No LatAm paradigm for this verb.",
-    search: "Search lemma", word: "Word", level: "Level", gloss: "Gloss",
-    newPerDay: "New words / day", reviewCap: "Review cap", save: "Save",
+    typeLemma: "Type the Spanish word", typeForm: "Type the verb form",
+    right: "Correct", answer: "Answer", accept: "Also accepted",
+    empty: "No words in this level range. Widen the levels above, or rebuild so meanings are included.",
+    noConj: "No Latin American conjugation is available for this verb.",
+    search: "Search", word: "Word", level: "Level", gloss: "Meaning",
+    newPerDay: "New words per day", reviewCap: "Review limit", save: "Save",
     expSet: "Export settings", impSet: "Import settings", expProg: "Export progress", impProg: "Import progress",
-    recorded: "Stored", localOnly: "cards. Progress and settings stay in this browser.",
-    noun: "noun", verb: "verb", adj: "adjective", adv: "adverb", rank: "rank",
-    t: {pres:"present", impf:"imperfect", fut:"future", cond:"conditional", "subj.pres":"present subjunctive", "subj.impf":"imperfect subjunctive", "subj.fut":"future subjunctive", imp:"imperative", ger:"gerund", part:"participle"},
-    foot: "Adapted dataset. Attribution and changes are in NOTICE.md. Not endorsed by upstream."
+    recorded: "Saved", localOnly: "cards. Progress and settings stay in this browser.",
+    noun: "noun", verb: "verb", adj: "adjective", adv: "adverb", rank: "frequency rank",
+    ger: "gerund", part: "past participle",
+    t: {pres:"present", impf:"imperfect", fut:"future", cond:"conditional", "subj.pres":"present subjunctive", "subj.impf":"imperfect subjunctive", "subj.fut":"future subjunctive", imp:"imperative", ger:"gerund", part:"past participle"},
+    foot: "Adapted dataset. Attribution and changes are in NOTICE.md. Not endorsed by the upstream projects."
   }
 };
-const PERSONS = {"1sg":"yo","2sg":"tú","3sg":"usted / él / ella","1pl":"nosotros","3pl":"ustedes", ger:"gerund", part:"participle"};
+const PERSONS = {"1sg":"yo","2sg":"tú","3sg":"usted / él / ella","1pl":"nosotros","3pl":"ustedes"};
 const LEVELS = ["A1","A2","B1","B2","C1","C2"];
 const VIEWS = ["review","dict","conj","browse","settings"];
 
@@ -361,7 +363,7 @@ function renderConj(app) {
   app.innerHTML = `<div class="card">
     <span class="pill">${tense}</span>
     <div class="lemma">${item.lemma}</div>
-    <div class="meta">${PERSONS[conj.person] || conj.person}</div>
+    <div class="meta">${PERSONS[conj.person] || t(conj.person) || conj.person}</div>
     <p><input id="ans" type="text" placeholder="${t("typeForm")}" autocomplete="off"></p>
     <p id="msg"></p>
   </div>
