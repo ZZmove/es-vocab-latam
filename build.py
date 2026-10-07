@@ -283,23 +283,12 @@ def build() -> None:
     )
     html = (WEB / "index.html").read_text(encoding="utf-8")
     (DIST / "index.html").write_text(html, encoding="utf-8")
-    (DIST / "NOTICE.md").write_text(NOTICE, encoding="utf-8")
+    (DIST / "NOTICE.md").write_text((ROOT / "NOTICE.md").read_text(encoding="utf-8"), encoding="utf-8")
+    (DIST / "LICENSE-DATA").write_text((ROOT / "LICENSE-DATA").read_text(encoding="utf-8"), encoding="utf-8")
     verbs = sum(1 for v in vocab if v["paradigms"])
     gloss_n = sum(1 for v in vocab if v["gloss"])
     print(f"vocab {len(vocab)} with gloss {gloss_n} with paradigm {verbs} sentences {len(sent_out)}")
     print(f"wrote {DIST}")
-
-
-NOTICE = """# 出处
-
-练习词表由构建脚本合并，不在本仓库重复分发原始档。生成物若公开，请保留本说明。
-
-- 词元、词频、词性、阴阳性、变位、CEFR 估算：wordhoard 0.1.0（OpenSubtitles 词频 + Wiktionary/kaikki）。数据集 CC-BY-SA 4.0。https://github.com/natema/wordhoard
-- 英文释义：doozan/spanish_data，来自英语维基词典，CC-BY-SA。https://github.com/doozan/spanish_data
-- 例句：Tatoeba，CC-BY 2.0 FR。https://tatoeba.org
-- CEFR 是按词频估算的，不是塞万提斯学院考纲。
-- 变位按通用拉美教学：没有 vosotros。ustedes 用原表第三人称复数。命令式 ustedes 取虚拟现在第三人称复数。tú 命令式源标签不可靠，不进入练习。没有单独标注的简单过去时（pretérito indefinido）。不是智利口语变位（estái）也不是河板 voseo。
-"""
 
 
 if __name__ == "__main__":

@@ -35,4 +35,4 @@ Cloudflare Pages：把 `dist/` 作为根目录上传，或连到本仓库后把�
 
 ## 许可
 
-脚本和页面模板 MIT。生成的词表不是 MIT，见 `dist/NOTICE.md`。
+脚本和页面模板 MIT，见 `LICENSE`。生成的 `vocab.json` 和 `sentences.json` 是 CC-BY-SA 4.0 改编词表，例句另受 Tatoeba CC-BY 2.0 FR 约束。公开 `dist/` 时必须带上 `NOTICE.md` 和 `LICENSE-DATA`。署名、上游链接和改动说明都在 `NOTICE.md`。

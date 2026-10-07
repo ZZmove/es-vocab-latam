@@ -1,0 +1,12 @@
+The generated vocabulary files (vocab.json, sentences.json) are licensed under
+Creative Commons Attribution-ShareAlike 4.0 International.
+
+https://creativecommons.org/licenses/by-sa/4.0/legalcode
+
+Sentences are also under Creative Commons Attribution 2.0 France:
+
+https://creativecommons.org/licenses/by/2.0/fr/legalcode
+
+This is not the MIT license that covers build.py and web/index.html.
+Attribution and the ShareAlike obligation are in NOTICE.md.
+Keep this file and NOTICE.md with any public copy of the generated data.
