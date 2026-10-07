@@ -109,7 +109,7 @@
 <div class="chips" id="levels"></div>
 <div class="chips" id="quick" style="margin-top:.45rem"></div>
 <nav id="nav"></nav>
-<section id="app"></section>
+<section id="app">Loading…</section>
 <footer id="foot"></footer>
 <script>
 const I18N = {
@@ -380,11 +380,14 @@ function renderConj(app) {
 function renderBrowse(app) {
   const q = (document.getElementById("q") || {}).value || "";
   const rows = vocab.filter(v => !q || v.lemma.includes(q.toLowerCase())).slice(0, 80);
-  app.innerHTML = `<p><input id="q" type="text" placeholder="${t("search")}" value="${q.replace(/"/g,""")}"></p>
+  app.innerHTML = `<p><input id="q" type="text" placeholder="${t("search")}"></p>
     <table><tr><th>${t("word")}</th><th>${t("level")}</th><th>${t("gloss")}</th></tr>
     ${rows.map(v => `<tr><td>${art(v)}${v.lemma}</td><td>${v.cefr}</td><td>${v.gloss || ""}</td></tr>`).join("")}
     </table>`;
-  document.getElementById("q").oninput = () => renderBrowse(app);
+  const box = document.getElementById("q");
+  box.value = q;
+  box.oninput = () => renderBrowse(app);
+  box.focus();
 }
 function renderSettings(app) {
   app.innerHTML = `<div class="panel">
